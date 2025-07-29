@@ -42,6 +42,7 @@ const StudentDetail: React.FC = () => {
         notes: ''
     });
 
+// eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         fetchStudentDetails();
         fetchReports();
