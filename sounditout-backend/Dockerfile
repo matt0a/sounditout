@@ -1,10 +1,11 @@
 FROM eclipse-temurin:17-jdk-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy everything
 COPY . .
+
+# Give Maven wrapper permission to run
+RUN chmod +x mvnw
 
 # Build the application
 RUN ./mvnw clean package -DskipTests
