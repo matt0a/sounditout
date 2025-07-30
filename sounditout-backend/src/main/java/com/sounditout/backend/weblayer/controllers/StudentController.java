@@ -63,4 +63,10 @@ public class StudentController {
     }
 
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        studentService.delete(id);
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
 }

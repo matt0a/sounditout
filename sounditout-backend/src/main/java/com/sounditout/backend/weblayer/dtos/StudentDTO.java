@@ -20,6 +20,6 @@ public class StudentDTO {
     private StudentGroup studentGroup;
 
     @Min(3)
-    @Max(25)
+    @Max(40)
     private int age;
 }

@@ -3,6 +3,7 @@ package com.sounditout.backend.services;
 import com.sounditout.backend.domainLayer.entity.Student;
 import com.sounditout.backend.domainLayer.enums.StudentGroup;
 import com.sounditout.backend.repositories.StudentRepository;
+import com.sounditout.backend.repositories.UserRepository;
 import com.sounditout.backend.weblayer.dtos.StudentDTO;
 import com.sounditout.backend.weblayer.dtos.StudentResponse;
 import jakarta.validation.Valid;
@@ -18,6 +19,7 @@ import java.util.Optional;
 public class StudentService {
 
     private final StudentRepository studentRepository;
+    private final UserRepository userRepository;
 
     public StudentResponse create(@Valid StudentDTO dto) {
         Student student = Student.builder()
@@ -61,19 +63,24 @@ public class StudentService {
 
     @Transactional
     public void delete(Long id) {
-        Student existing =  studentRepository.findById(id)
+        Student existing = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
+        // First delete the associated user
+        userRepository.delete(existing.getUser());
+
+        // Then delete the student (progressReports will be removed due to cascade + orphanRemoval)
         studentRepository.delete(existing);
     }
+
 
     @Transactional
     public void assignGroup(Long studentId, StudentGroup group) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
 
-        student.setStudentGroup(group);  // 🎯 Assign the new group
-        studentRepository.save(student); // 💾 Persist the update
+        student.setStudentGroup(group);  // Assign the new group
+        studentRepository.save(student); // Save the updated student entity
     }
     public StudentResponse toResponse(Student student) {
         return new StudentResponse(

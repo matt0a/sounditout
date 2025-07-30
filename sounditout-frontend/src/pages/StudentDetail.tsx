@@ -5,6 +5,7 @@ import {
     getReportsByStudentId,
     updateStudentGroup,
     addProgressReport,
+    deleteStudent, // <-- Add this in StudentApi
 } from '../api/StudentApi';
 import { StudentDTO } from '../types/Student';
 import { StudentGroup } from '../types/Enums';
@@ -42,7 +43,7 @@ const StudentDetail: React.FC = () => {
         notes: ''
     });
 
-// eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         fetchStudentDetails();
         fetchReports();
@@ -109,6 +110,22 @@ const StudentDetail: React.FC = () => {
         }
     };
 
+    const handleDeleteStudent = async () => {
+        const confirmDelete = window.confirm(
+            `Are you sure you want to delete student "${student?.fullName}"? This action cannot be undone.`
+        );
+        if (confirmDelete) {
+            try {
+                await deleteStudent(studentId);
+                alert('Student deleted successfully.');
+                navigate('/dashboard'); // redirect after deletion
+            } catch (error) {
+                console.error('Error deleting student:', error);
+                alert('Failed to delete student.');
+            }
+        }
+    };
+
     const toggleExpandedReport = (id: number) => {
         setExpandedReportId(prev => (prev === id ? null : id));
     };
@@ -124,13 +141,21 @@ const StudentDetail: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6 text-gray-800 dark:text-gray-100 transition">
             <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-                {/* Back Button */}
-                <button
-                    onClick={() => navigate(-1)}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline mb-4"
-                >
-                    ← Back to Dashboard
-                </button>
+                {/* Top Bar: Back and Delete */}
+                <div className="flex justify-between items-center mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                        ← Back to Dashboard
+                    </button>
+                    <button
+                        onClick={handleDeleteStudent}
+                        className="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded"
+                    >
+                        Delete Student
+                    </button>
+                </div>
 
                 <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                     {student.fullName}

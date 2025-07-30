@@ -38,7 +38,7 @@ public class Student {
     @Column(nullable = true)
     private StudentGroup studentGroup;
 
-    @Min(5)
+    @Min(3)
     @Max(40)
     @Column(nullable = false)
     private int age;

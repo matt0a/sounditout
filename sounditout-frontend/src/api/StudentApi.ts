@@ -42,4 +42,7 @@ export const addProgressReport = async (
     await api.post(`/reports/${id}`, report);
 };
 
+export const deleteStudent = async (id: number): Promise<void> => {
+    await api.delete(`/students/${id}`);
+};
 
