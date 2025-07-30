@@ -20,6 +20,7 @@ const getUserRole = (roles: string[]): 'admin' | 'student' | 'unknown' => {
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
@@ -39,33 +40,19 @@ const LoginPage: React.FC = () => {
 
             localStorage.setItem('token', token);
 
-            try {
-                const decoded = jwtDecode<DecodedToken>(token);
-                console.log('✅ Decoded token:', decoded);
+            const decoded = jwtDecode<DecodedToken>(token);
+            const roleList: string[] = decoded.roles ?? (decoded.role ? [decoded.role] : []);
+            const role = getUserRole(roleList);
 
-                const roleList: string[] = decoded.roles ?? (decoded.role ? [decoded.role] : []);
-                if (roleList.length === 0) {
-                    setError('Token missing roles');
-                    return;
-                }
-
-                const role = getUserRole(roleList);
-                console.log('✅ User role:', role);
-
-                switch (role) {
-                    case 'admin':
-                        navigate('/dashboard');
-                        break;
-                    case 'student':
-                        navigate('/home');
-                        break;
-                    default:
-                        setError('Unauthorized role');
-                        break;
-                }
-            } catch (decodeErr) {
-                console.error('❌ Token decode error:', decodeErr);
-                setError('Failed to decode token');
+            switch (role) {
+                case 'admin':
+                    navigate('/dashboard');
+                    break;
+                case 'student':
+                    navigate('/home');
+                    break;
+                default:
+                    setError('Unauthorized role');
             }
 
         } catch (err: any) {
@@ -76,7 +63,7 @@ const LoginPage: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors">
-        <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+            <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-4">Login</h2>
 
                 {error && <p className="text-red-500 mb-2">{error}</p>}
@@ -91,14 +78,23 @@ const LoginPage: React.FC = () => {
                         className="w-full p-2 border border-gray-300 rounded"
                     />
 
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        required
-                        className="w-full p-2 border border-gray-300 rounded"
-                    />
+                    <div className="relative">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="Password"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            required
+                            className="w-full p-2 border border-gray-300 rounded pr-10"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(prev => !prev)}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sm text-blue-600"
+                        >
+                            {showPassword ? 'Hide' : 'Show'}
+                        </button>
+                    </div>
 
                     <button
                         type="submit"
@@ -108,7 +104,6 @@ const LoginPage: React.FC = () => {
                     </button>
                 </form>
 
-                {/* Sign Up Link */}
                 <p className="mt-4 text-sm text-center">
                     Don’t have an account?{' '}
                     <a href="/register" className="text-blue-600 hover:underline font-medium">
@@ -121,4 +116,3 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
-
