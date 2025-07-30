@@ -15,6 +15,8 @@ const RegisterPage: React.FC = () => {
         isAdmin: false,
     });
 
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [passwordStrength, setPasswordStrength] = useState('');
@@ -67,6 +69,11 @@ const RegisterPage: React.FC = () => {
             return;
         }
 
+        if (form.password !== confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+
         try {
             const response = await api.post('/auth/register', form);
             setSuccess('Registration successful!');
@@ -82,7 +89,7 @@ const RegisterPage: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors">
-        <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+            <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-4">Register</h2>
 
                 {error && <p className="text-red-500 mb-2">{error}</p>}
@@ -109,15 +116,24 @@ const RegisterPage: React.FC = () => {
                         className="w-full p-2 border border-gray-300 rounded"
                     />
 
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        value={form.password}
-                        onChange={handleChange}
-                        required
-                        className="w-full p-2 border border-gray-300 rounded"
-                    />
+                    <div className="relative">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            placeholder="Password"
+                            value={form.password}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-2 border border-gray-300 rounded pr-10"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute top-1/2 right-2 transform -translate-y-1/2 text-sm text-blue-600"
+                        >
+                            {showPassword ? 'Hide' : 'Show'}
+                        </button>
+                    </div>
 
                     {form.password && (
                         <div className="text-sm">
@@ -135,6 +151,18 @@ const RegisterPage: React.FC = () => {
                             </span>
                         </div>
                     )}
+
+                    <div className="relative">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            name="confirmPassword"
+                            placeholder="Confirm Password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            className="w-full p-2 border border-gray-300 rounded pr-10"
+                        />
+                    </div>
 
                     <input
                         type="text"
