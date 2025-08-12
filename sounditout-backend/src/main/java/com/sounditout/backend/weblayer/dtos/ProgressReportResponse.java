@@ -19,4 +19,6 @@ public class ProgressReportResponse {
     private String milestone;
     private String notes;
     private Long studentId;
+    private String accomplishments;
+    private String improvementsNeeded;
 }

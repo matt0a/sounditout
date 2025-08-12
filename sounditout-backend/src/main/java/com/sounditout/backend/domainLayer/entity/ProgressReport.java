@@ -34,6 +34,12 @@ public class ProgressReport {
 
     private String notes;
 
+    @Column(columnDefinition = "text")
+    private String accomplishments;      // NEW
+
+    @Column(name = "improvements_needed", columnDefinition = "text")
+    private String improvementsNeeded;   // NEW
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "student_id",

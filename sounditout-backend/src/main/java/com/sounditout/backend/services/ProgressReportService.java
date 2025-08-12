@@ -36,6 +36,8 @@ public class ProgressReportService {
                 .initialGradeLevel(dto.getInitialGradeLevel())
                 .milestone(dto.getMilestone())
                 .notes(dto.getNotes())
+                .accomplishments(dto.getAccomplishments())
+                .improvementsNeeded(dto.getImprovementsNeeded())
                 .build();
 
         return progressReportRepository.save(report);
@@ -67,7 +69,9 @@ public class ProgressReportService {
                 report.getDifficulty(),
                 report.getMilestone(),
                 report.getNotes(),
-                report.getStudent().getId()
+                report.getStudent().getId(),
+                report.getAccomplishments(),
+                report.getImprovementsNeeded()
         );
     }
 

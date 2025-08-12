@@ -16,4 +16,8 @@ public class ProgressReportDTO {
     private String milestone;
 
     private String notes;
+
+    private String accomplishments;
+
+    private String improvementsNeeded;
 }
