@@ -139,6 +139,7 @@ const Dashboard: React.FC = () => {
                             <h3 className="font-bold text-lg text-gray-800 dark:text-gray-100 mb-1">
                                 {report.lessonTopic}
                             </h3>
+
                             <p className="text-gray-700 dark:text-gray-200">
                                 <span className="font-semibold">Level:</span> {report.initialGradeLevel}
                             </p>
@@ -148,9 +149,36 @@ const Dashboard: React.FC = () => {
                             <p className="text-gray-700 dark:text-gray-200">
                                 <span className="font-semibold">Milestone:</span> {report.milestone}
                             </p>
-                            <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">
-                                {report.notes}
-                            </p>
+
+                            {report.notes && (
+                                <p className="text-sm mt-2 text-gray-600 dark:text-gray-300 whitespace-pre-line">
+                                    {report.notes}
+                                </p>
+                            )}
+
+                            {/* NEW: Accomplishments */}
+                            {report.accomplishments && (
+                                <div className="mt-3 p-3 rounded bg-green-50 dark:bg-green-900/30">
+                                    <p className="font-semibold text-green-700 dark:text-green-300 mb-1">
+                                        Accomplishments
+                                    </p>
+                                    <p className="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line">
+                                        {report.accomplishments}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* NEW: Improvements Needed */}
+                            {report.improvementsNeeded && (
+                                <div className="mt-3 p-3 rounded bg-amber-50 dark:bg-amber-900/30">
+                                    <p className="font-semibold text-amber-700 dark:text-amber-300 mb-1">
+                                        Improvements Needed
+                                    </p>
+                                    <p className="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line">
+                                        {report.improvementsNeeded}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

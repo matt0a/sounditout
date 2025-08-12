@@ -8,6 +8,8 @@ export interface ProgressReport {
     milestone: string;
     notes: string;
     studentId: number;
+    accomplishments?: string;      // NEW
+    improvementsNeeded?: string;  // NEW
 }
 
 

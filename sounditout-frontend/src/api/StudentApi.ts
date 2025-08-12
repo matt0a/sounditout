@@ -37,6 +37,8 @@ export const addProgressReport = async (
         difficulty: number;
         milestone: string;
         notes: string;
+        accomplishments?: string;       // NEW
+        improvementsNeeded?: string;    // NEW
     }
 ): Promise<void> => {
     await api.post(`/reports/${id}`, report);

@@ -18,6 +18,8 @@ interface Report {
     milestone: string;
     notes: string;
     date: string;
+    accomplishments?: string;      // NEW
+    improvementsNeeded?: string;   // NEW
 }
 
 const StudentDetail: React.FC = () => {
@@ -40,7 +42,9 @@ const StudentDetail: React.FC = () => {
         initialGradeLevel: '' as number | '',
         difficulty: '' as number | '',
         milestone: '',
-        notes: ''
+        notes: '',
+        accomplishments: '',        // NEW
+        improvementsNeeded: ''      // NEW
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -62,7 +66,7 @@ const StudentDetail: React.FC = () => {
         try {
             const reportData = await getReportsByStudentId(studentId);
             const sorted = reportData.sort(
-                (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+                (a: Report, b: Report) => new Date(b.date).getTime() - new Date(a.date).getTime()
             );
             setReports(sorted);
         } catch (error) {
@@ -101,7 +105,9 @@ const StudentDetail: React.FC = () => {
                 initialGradeLevel: '',
                 difficulty: '',
                 milestone: '',
-                notes: ''
+                notes: '',
+                accomplishments: '',       // NEW reset
+                improvementsNeeded: ''     // NEW reset
             });
             setShowForm(false);
             fetchReports();
@@ -219,11 +225,17 @@ const StudentDetail: React.FC = () => {
                                 {new Date(report.date).toLocaleDateString()} - {report.lessonTopic}
                             </p>
                             {expandedReportId === report.id && (
-                                <div className="mt-2 text-sm text-gray-700 dark:text-gray-200">
+                                <div className="mt-2 text-sm text-gray-700 dark:text-gray-200 space-y-1">
                                     <p><strong>Initial Grade Level:</strong> {report.initialGradeLevel}</p>
                                     <p><strong>Difficulty:</strong> {report.difficulty}</p>
                                     <p><strong>Milestone:</strong> {report.milestone}</p>
                                     <p><strong>Notes:</strong> {report.notes}</p>
+                                    {report.accomplishments && (
+                                        <p><strong>Accomplishments:</strong> {report.accomplishments}</p>
+                                    )}
+                                    {report.improvementsNeeded && (
+                                        <p><strong>Improvements Needed:</strong> {report.improvementsNeeded}</p>
+                                    )}
                                 </div>
                             )}
                         </li>
@@ -290,6 +302,25 @@ const StudentDetail: React.FC = () => {
                             className="border p-2 rounded dark:bg-gray-700 dark:text-white"
                             rows={3}
                         />
+                        {/* NEW: Accomplishments */}
+                        <textarea
+                            name="accomplishments"
+                            placeholder="Accomplishments (optional)"
+                            value={formData.accomplishments}
+                            onChange={handleFormChange}
+                            className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                            rows={3}
+                        />
+                        {/* NEW: Improvements Needed */}
+                        <textarea
+                            name="improvementsNeeded"
+                            placeholder="Improvements Needed (optional)"
+                            value={formData.improvementsNeeded}
+                            onChange={handleFormChange}
+                            className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                            rows={3}
+                        />
+
                         <button
                             type="submit"
                             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
