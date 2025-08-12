@@ -124,7 +124,7 @@ const Dashboard: React.FC = () => {
                     {reports.map((report) => (
                         <div
                             key={report.id}
-                            className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded p-4 shadow hover:shadow-lg transition duration-300 relative"
+                            className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded p-4 shadow hover:shadow-lg transition duration-300 relative break-words"
                         >
                             <span
                                 className={`absolute top-2 right-2 w-3 h-3 rounded-full ${getDifficultyColor(
@@ -151,30 +151,28 @@ const Dashboard: React.FC = () => {
                             </p>
 
                             {report.notes && (
-                                <p className="text-sm mt-2 text-gray-600 dark:text-gray-300 whitespace-pre-line">
+                                <p className="text-sm mt-2 text-gray-600 dark:text-gray-300 whitespace-pre-line break-words">
                                     {report.notes}
                                 </p>
                             )}
 
-                            {/* NEW: Accomplishments */}
                             {report.accomplishments && (
                                 <div className="mt-3 p-3 rounded bg-green-50 dark:bg-green-900/30">
                                     <p className="font-semibold text-green-700 dark:text-green-300 mb-1">
                                         Accomplishments
                                     </p>
-                                    <p className="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line">
+                                    <p className="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line break-words">
                                         {report.accomplishments}
                                     </p>
                                 </div>
                             )}
 
-                            {/* NEW: Improvements Needed */}
                             {report.improvementsNeeded && (
                                 <div className="mt-3 p-3 rounded bg-amber-50 dark:bg-amber-900/30">
                                     <p className="font-semibold text-amber-700 dark:text-amber-300 mb-1">
                                         Improvements Needed
                                     </p>
-                                    <p className="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line">
+                                    <p className="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line break-words">
                                         {report.improvementsNeeded}
                                     </p>
                                 </div>

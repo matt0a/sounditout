@@ -5,7 +5,7 @@ import {
     getReportsByStudentId,
     updateStudentGroup,
     addProgressReport,
-    deleteStudent, // <-- Add this in StudentApi
+    deleteStudent,
 } from '../api/StudentApi';
 import { StudentDTO } from '../types/Student';
 import { StudentGroup } from '../types/Enums';
@@ -43,14 +43,14 @@ const StudentDetail: React.FC = () => {
         difficulty: '' as number | '',
         milestone: '',
         notes: '',
-        accomplishments: '',        // NEW
-        improvementsNeeded: ''      // NEW
+        accomplishments: '',       // NEW
+        improvementsNeeded: ''     // NEW
     });
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         fetchStudentDetails();
         fetchReports();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     const fetchStudentDetails = async () => {
@@ -106,8 +106,8 @@ const StudentDetail: React.FC = () => {
                 difficulty: '',
                 milestone: '',
                 notes: '',
-                accomplishments: '',       // NEW reset
-                improvementsNeeded: ''     // NEW reset
+                accomplishments: '',
+                improvementsNeeded: ''
             });
             setShowForm(false);
             fetchReports();
@@ -124,7 +124,7 @@ const StudentDetail: React.FC = () => {
             try {
                 await deleteStudent(studentId);
                 alert('Student deleted successfully.');
-                navigate('/dashboard'); // redirect after deletion
+                navigate('/dashboard');
             } catch (error) {
                 console.error('Error deleting student:', error);
                 alert('Failed to delete student.');
@@ -225,16 +225,22 @@ const StudentDetail: React.FC = () => {
                                 {new Date(report.date).toLocaleDateString()} - {report.lessonTopic}
                             </p>
                             {expandedReportId === report.id && (
-                                <div className="mt-2 text-sm text-gray-700 dark:text-gray-200 space-y-1">
+                                <div className="mt-2 text-sm text-gray-700 dark:text-gray-200 space-y-1 break-words">
                                     <p><strong>Initial Grade Level:</strong> {report.initialGradeLevel}</p>
                                     <p><strong>Difficulty:</strong> {report.difficulty}</p>
                                     <p><strong>Milestone:</strong> {report.milestone}</p>
-                                    <p><strong>Notes:</strong> {report.notes}</p>
+                                    <p className="whitespace-pre-line">
+                                        <strong>Notes:</strong> {report.notes}
+                                    </p>
                                     {report.accomplishments && (
-                                        <p><strong>Accomplishments:</strong> {report.accomplishments}</p>
+                                        <p className="whitespace-pre-line">
+                                            <strong>Accomplishments:</strong> {report.accomplishments}
+                                        </p>
                                     )}
                                     {report.improvementsNeeded && (
-                                        <p><strong>Improvements Needed:</strong> {report.improvementsNeeded}</p>
+                                        <p className="whitespace-pre-line">
+                                            <strong>Improvements Needed:</strong> {report.improvementsNeeded}
+                                        </p>
                                     )}
                                 </div>
                             )}
@@ -302,7 +308,6 @@ const StudentDetail: React.FC = () => {
                             className="border p-2 rounded dark:bg-gray-700 dark:text-white"
                             rows={3}
                         />
-                        {/* NEW: Accomplishments */}
                         <textarea
                             name="accomplishments"
                             placeholder="Accomplishments (optional)"
@@ -311,7 +316,6 @@ const StudentDetail: React.FC = () => {
                             className="border p-2 rounded dark:bg-gray-700 dark:text-white"
                             rows={3}
                         />
-                        {/* NEW: Improvements Needed */}
                         <textarea
                             name="improvementsNeeded"
                             placeholder="Improvements Needed (optional)"
