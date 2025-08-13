@@ -60,6 +60,24 @@ public class ProgressReportService {
         progressReportRepository.deleteById(id);
     }
 
+    @Transactional
+    public ProgressReport update(Long id, @Valid ProgressReportDTO dto) {
+        ProgressReport report = progressReportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+
+        report.setLessonTopic(dto.getLessonTopic());
+        report.setInitialGradeLevel(dto.getInitialGradeLevel());
+        report.setDifficulty(dto.getDifficulty());
+        report.setMilestone(dto.getMilestone());
+        report.setNotes(dto.getNotes());
+        report.setAccomplishments(dto.getAccomplishments());
+        report.setImprovementsNeeded(dto.getImprovementsNeeded());
+
+        return progressReportRepository.save(report);
+    }
+
+
     public ProgressReportResponse toResponse(ProgressReport report) {
         return new ProgressReportResponse(
                 report.getId(),

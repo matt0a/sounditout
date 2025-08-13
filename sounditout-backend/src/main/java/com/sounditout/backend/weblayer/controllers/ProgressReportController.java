@@ -58,4 +58,23 @@ public class ProgressReportController {
                 .map(reportService::toResponse)
                 .toList());
     }
+
+    /** Update an existing progress report (ADMIN only) */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProgressReportResponse> updateReport(
+            @PathVariable Long id,
+            @Valid @RequestBody ProgressReportDTO dto) {
+
+        ProgressReport updated = reportService.update(id, dto);
+        return ResponseEntity.ok(reportService.toResponse(updated));
+    }
+
+    /** Delete a progress report (ADMIN only) */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteReport(@PathVariable Long id) {
+        reportService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }
