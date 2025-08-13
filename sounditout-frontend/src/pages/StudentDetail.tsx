@@ -6,6 +6,9 @@ import {
     updateStudentGroup,
     addProgressReport,
     deleteStudent,
+    // NEW:
+    updateProgressReport,
+    deleteProgressReport,
 } from '../api/StudentApi';
 import { StudentDTO } from '../types/Student';
 import { StudentGroup } from '../types/Enums';
@@ -42,9 +45,23 @@ const StudentDetail: React.FC = () => {
         initialGradeLevel: '' as number | '',
         difficulty: '' as number | '',
         milestone: '',
+        accomplishments: '',       // stays, but Notes moves to last
+        improvementsNeeded: '',
         notes: '',
-        accomplishments: '',       // NEW
-        improvementsNeeded: ''     // NEW
+    });
+
+    // --- Edit modal state ---
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingReport, setEditingReport] = useState<Report | null>(null);
+    const [editForm, setEditForm] = useState({
+        date: '',
+        lessonTopic: '',
+        initialGradeLevel: '' as number | '',
+        difficulty: '' as number | '',
+        milestone: '',
+        accomplishments: '',
+        improvementsNeeded: '',
+        notes: '',
     });
 
     useEffect(() => {
@@ -105,9 +122,9 @@ const StudentDetail: React.FC = () => {
                 initialGradeLevel: '',
                 difficulty: '',
                 milestone: '',
-                notes: '',
                 accomplishments: '',
-                improvementsNeeded: ''
+                improvementsNeeded: '',
+                notes: '', // reset
             });
             setShowForm(false);
             fetchReports();
@@ -140,6 +157,62 @@ const StudentDetail: React.FC = () => {
         const newGrade = e.target.value;
         setFrontendGrade(newGrade);
         localStorage.setItem(`frontendGrade-${studentId}`, newGrade);
+    };
+
+    // --- Edit/Delete helpers ---
+
+    const openEditModal = (report: Report, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setEditingReport(report);
+        setEditForm({
+            date: report.date.slice(0, 10), // yyyy-MM-dd
+            lessonTopic: report.lessonTopic,
+            initialGradeLevel: report.initialGradeLevel,
+            difficulty: report.difficulty,
+            milestone: report.milestone ?? '',
+            accomplishments: report.accomplishments ?? '',
+            improvementsNeeded: report.improvementsNeeded ?? '',
+            notes: report.notes ?? '',
+        });
+        setIsEditOpen(true);
+    };
+
+    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setEditForm({ ...editForm, [e.target.name]: e.target.value });
+    };
+
+    const submitEdit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingReport) return;
+        try {
+            await updateProgressReport(editingReport.id, {
+                ...editForm,
+                initialGradeLevel: Number(editForm.initialGradeLevel),
+                difficulty: Number(editForm.difficulty),
+            });
+            setIsEditOpen(false);
+            setEditingReport(null);
+            setMessage('Report updated!');
+            fetchReports();
+        } catch (err) {
+            console.error('Error updating report:', err);
+            alert('Failed to update report');
+        }
+    };
+
+    const removeReport = async (reportId: number, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        const ok = window.confirm('Delete this progress report? This cannot be undone.');
+        if (!ok) return;
+        try {
+            await deleteProgressReport(reportId);
+            setMessage('Report deleted.');
+            setExpandedReportId(prev => (prev === reportId ? null : prev));
+            fetchReports();
+        } catch (err) {
+            console.error('Error deleting report:', err);
+            alert('Failed to delete report');
+        }
     };
 
     if (!student) return <p className="text-center text-gray-600 dark:text-gray-300">Loading student...</p>;
@@ -221,17 +294,35 @@ const StudentDetail: React.FC = () => {
                             onClick={() => toggleExpandedReport(report.id)}
                             className="p-4 border rounded cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
                         >
-                            <p className="font-semibold text-gray-800 dark:text-gray-100">
-                                {new Date(report.date).toLocaleDateString()} - {report.lessonTopic}
-                            </p>
+                            <div className="flex justify-between gap-3">
+                                <p className="font-semibold text-gray-800 dark:text-gray-100">
+                                    {new Date(report.date).toLocaleDateString()} - {report.lessonTopic}
+                                </p>
+
+                                {/* Edit/Delete buttons */}
+                                <div className="flex gap-2 shrink-0">
+                                    <button
+                                        onClick={(e) => openEditModal(report, e)}
+                                        className="text-xs px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                                        title="Edit report"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={(e) => removeReport(report.id, e)}
+                                        className="text-xs px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                                        title="Delete report"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+
                             {expandedReportId === report.id && (
                                 <div className="mt-2 text-sm text-gray-700 dark:text-gray-200 space-y-1 break-words">
                                     <p><strong>Initial Grade Level:</strong> {report.initialGradeLevel}</p>
                                     <p><strong>Difficulty:</strong> {report.difficulty}</p>
                                     <p><strong>Milestone:</strong> {report.milestone}</p>
-                                    <p className="whitespace-pre-line">
-                                        <strong>Notes:</strong> {report.notes}
-                                    </p>
                                     {report.accomplishments && (
                                         <p className="whitespace-pre-line">
                                             <strong>Accomplishments:</strong> {report.accomplishments}
@@ -242,6 +333,9 @@ const StudentDetail: React.FC = () => {
                                             <strong>Improvements Needed:</strong> {report.improvementsNeeded}
                                         </p>
                                     )}
+                                    <p className="whitespace-pre-line">
+                                        <strong>Notes:</strong> {report.notes}
+                                    </p>
                                 </div>
                             )}
                         </li>
@@ -301,14 +395,6 @@ const StudentDetail: React.FC = () => {
                             className="border p-2 rounded dark:bg-gray-700 dark:text-white"
                         />
                         <textarea
-                            name="notes"
-                            placeholder="Additional Notes"
-                            value={formData.notes}
-                            onChange={handleFormChange}
-                            className="border p-2 rounded dark:bg-gray-700 dark:text-white"
-                            rows={3}
-                        />
-                        <textarea
                             name="accomplishments"
                             placeholder="Accomplishments (optional)"
                             value={formData.accomplishments}
@@ -324,6 +410,15 @@ const StudentDetail: React.FC = () => {
                             className="border p-2 rounded dark:bg-gray-700 dark:text-white"
                             rows={3}
                         />
+                        {/* Notes moved to LAST */}
+                        <textarea
+                            name="notes"
+                            placeholder="Additional Notes"
+                            value={formData.notes}
+                            onChange={handleFormChange}
+                            className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                            rows={3}
+                        />
 
                         <button
                             type="submit"
@@ -334,6 +429,109 @@ const StudentDetail: React.FC = () => {
                     </form>
                 )}
             </div>
+
+            {/* EDIT MODAL */}
+            {isEditOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-lg p-5 shadow-lg">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-lg font-semibold">Edit Progress Report</h4>
+                            <button
+                                onClick={() => setIsEditOpen(false)}
+                                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <form onSubmit={submitEdit} className="grid gap-3">
+                            <input
+                                type="date"
+                                name="date"
+                                value={editForm.date}
+                                onChange={handleEditChange}
+                                className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                                required
+                            />
+                            <input
+                                type="text"
+                                name="lessonTopic"
+                                value={editForm.lessonTopic}
+                                onChange={handleEditChange}
+                                placeholder="Lesson Topic"
+                                className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                                required
+                            />
+                            <input
+                                type="number"
+                                name="initialGradeLevel"
+                                value={editForm.initialGradeLevel}
+                                onChange={handleEditChange}
+                                placeholder="Initial Grade Level"
+                                className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                                required
+                            />
+                            <input
+                                type="number"
+                                name="difficulty"
+                                value={editForm.difficulty}
+                                onChange={handleEditChange}
+                                placeholder="Difficulty (1–10)"
+                                className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                                required
+                            />
+                            <input
+                                type="text"
+                                name="milestone"
+                                value={editForm.milestone}
+                                onChange={handleEditChange}
+                                placeholder="Milestone"
+                                className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                            />
+                            <textarea
+                                name="accomplishments"
+                                value={editForm.accomplishments}
+                                onChange={handleEditChange}
+                                placeholder="Accomplishments (optional)"
+                                className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                                rows={3}
+                            />
+                            <textarea
+                                name="improvementsNeeded"
+                                value={editForm.improvementsNeeded}
+                                onChange={handleEditChange}
+                                placeholder="Improvements Needed (optional)"
+                                className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                                rows={3}
+                            />
+                            <textarea
+                                name="notes"
+                                value={editForm.notes}
+                                onChange={handleEditChange}
+                                placeholder="Additional Notes"
+                                className="border p-2 rounded dark:bg-gray-700 dark:text-white"
+                                rows={3}
+                            />
+
+                            <div className="flex justify-end gap-2 mt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditOpen(false)}
+                                    className="px-4 py-2 rounded border bg-gray-100 dark:bg-gray-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

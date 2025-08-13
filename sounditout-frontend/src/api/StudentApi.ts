@@ -48,3 +48,29 @@ export const deleteStudent = async (id: number): Promise<void> => {
     await api.delete(`/students/${id}`);
 };
 
+/* ================================
+   NEW: ProgressReport Edit/Delete
+   ================================ */
+
+// UPDATE a progress report
+export const updateProgressReport = async (
+    reportId: number,
+    body: {
+        date: string;
+        lessonTopic: string;
+        initialGradeLevel: number;
+        difficulty: number;
+        milestone: string;
+        notes: string;
+        accomplishments?: string;
+        improvementsNeeded?: string;
+    }
+): Promise<ProgressReport> => {
+    const { data } = await api.put<ProgressReport>(`/reports/${reportId}`, body);
+    return data;
+};
+
+// DELETE a progress report
+export const deleteProgressReport = async (reportId: number): Promise<void> => {
+    await api.delete(`/reports/${reportId}`);
+};
