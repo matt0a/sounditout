@@ -30,7 +30,7 @@ public class ProgressReportService {
 
         ProgressReport report = ProgressReport.builder()
                 .student(student)
-                .date(LocalDate.now()) // or dto.getDate() if you expose that
+                .date(dto.getDate())
                 .lessonTopic(dto.getLessonTopic())
                 .difficulty(dto.getDifficulty())
                 .initialGradeLevel(dto.getInitialGradeLevel())
@@ -66,6 +66,7 @@ public class ProgressReportService {
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
 
+        report.setDate(dto.getDate());
         report.setLessonTopic(dto.getLessonTopic());
         report.setInitialGradeLevel(dto.getInitialGradeLevel());
         report.setDifficulty(dto.getDifficulty());
