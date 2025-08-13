@@ -20,10 +20,17 @@ interface Report {
     difficulty: number;
     milestone: string;
     notes: string;
-    date: string;
-    accomplishments?: string;      // NEW
-    improvementsNeeded?: string;   // NEW
+    date: string; // "YYYY-MM-DD"
+    accomplishments?: string;
+    improvementsNeeded?: string;
 }
+
+// Safe "YYYY-MM-DD" -> "M/D/YYYY" (avoid timezone shifts)
+const formatDate = (iso: string) => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${Number(m)}/${Number(d)}/${y}`;
+};
 
 const StudentDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -45,8 +52,9 @@ const StudentDetail: React.FC = () => {
         initialGradeLevel: '' as number | '',
         difficulty: '' as number | '',
         milestone: '',
-        accomplishments: '',       // stays, but Notes moves to last
+        accomplishments: '',
         improvementsNeeded: '',
+        // Notes LAST
         notes: '',
     });
 
@@ -82,9 +90,8 @@ const StudentDetail: React.FC = () => {
     const fetchReports = async () => {
         try {
             const reportData = await getReportsByStudentId(studentId);
-            const sorted = reportData.sort(
-                (a: Report, b: Report) => new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
+            // Sort by ISO date string (desc)
+            const sorted = reportData.sort((a: Report, b: Report) => b.date.localeCompare(a.date));
             setReports(sorted);
         } catch (error) {
             console.error('Error fetching reports:', error);
@@ -124,7 +131,7 @@ const StudentDetail: React.FC = () => {
                 milestone: '',
                 accomplishments: '',
                 improvementsNeeded: '',
-                notes: '', // reset
+                notes: '',
             });
             setShowForm(false);
             fetchReports();
@@ -160,12 +167,11 @@ const StudentDetail: React.FC = () => {
     };
 
     // --- Edit/Delete helpers ---
-
     const openEditModal = (report: Report, e?: React.MouseEvent) => {
         if (e) e.stopPropagation();
         setEditingReport(report);
         setEditForm({
-            date: report.date.slice(0, 10), // yyyy-MM-dd
+            date: report.date.slice(0, 10), // yyyy-MM-dd for <input type="date">
             lessonTopic: report.lessonTopic,
             initialGradeLevel: report.initialGradeLevel,
             difficulty: report.difficulty,
@@ -296,7 +302,7 @@ const StudentDetail: React.FC = () => {
                         >
                             <div className="flex justify-between gap-3">
                                 <p className="font-semibold text-gray-800 dark:text-gray-100">
-                                    {new Date(report.date).toLocaleDateString()} - {report.lessonTopic}
+                                    {formatDate(report.date)} - {report.lessonTopic}
                                 </p>
 
                                 {/* Edit/Delete buttons */}
@@ -410,7 +416,7 @@ const StudentDetail: React.FC = () => {
                             className="border p-2 rounded dark:bg-gray-700 dark:text-white"
                             rows={3}
                         />
-                        {/* Notes moved to LAST */}
+                        {/* Notes LAST */}
                         <textarea
                             name="notes"
                             placeholder="Additional Notes"
