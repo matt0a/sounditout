@@ -52,14 +52,20 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 px-6 py-10 transition-colors">
-            <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 border border-blue-200 dark:border-blue-500">
-
+            <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 border border-blue-200 dark:border-blue-500">
                 {/* Top Bar */}
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
                     <h2 className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                         Admin Dashboard
                     </h2>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                        {/* NEW: Admin AI Tools */}
+                        <button
+                            onClick={() => navigate('/admin/ai-tools')}
+                            className="px-3 py-1 text-sm rounded border bg-blue-600 text-white hover:bg-blue-700"
+                        >
+                            AI Tools
+                        </button>
                         <button
                             onClick={() => setDarkMode(!darkMode)}
                             className={`px-3 py-1 text-sm rounded border focus:outline-none ${
@@ -81,7 +87,7 @@ const AdminDashboard: React.FC = () => {
 
                 <SearchBar value={search} onChange={handleSearch} />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
                     {students.map((student) => (
                         <StudentCard
                             key={student.id}
@@ -90,6 +96,13 @@ const AdminDashboard: React.FC = () => {
                         />
                     ))}
                 </div>
+
+                {/* Empty state */}
+                {students.length === 0 && (
+                    <div className="text-center text-sm text-gray-600 dark:text-gray-300 mt-6">
+                        No students found.
+                    </div>
+                )}
             </div>
         </div>
     );

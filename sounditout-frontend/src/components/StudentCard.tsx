@@ -8,9 +8,26 @@ interface Props {
 const StudentCard: React.FC<Props> = ({ fullName, onClick }) => (
     <div
         onClick={onClick}
-        className="cursor-pointer p-4 bg-blue-100 dark:bg-gray-700 border border-blue-300 dark:border-blue-600 rounded-lg shadow hover:shadow-md hover:bg-blue-200 dark:hover:bg-gray-600 transition"
+        className="
+      cursor-pointer
+      p-5
+      bg-white dark:bg-gray-800
+      border border-gray-200 dark:border-gray-700
+      rounded-xl
+      shadow-sm
+      hover:shadow-lg
+      hover:-translate-y-1
+      transform
+      transition-all
+      duration-200
+    "
     >
-        <p className="text-lg font-semibold text-blue-800 dark:text-white">{fullName}</p>
+        <p className="text-xl font-medium text-gray-900 dark:text-white tracking-wide">
+            {fullName}
+        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Student
+        </p>
     </div>
 );
 

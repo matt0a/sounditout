@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,7 +20,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final CustomUserDetailsService UserDetailsService;
+    private final CustomUserDetailsService userDetailsService; // fixed name
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -30,30 +29,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
+        // No token -> continue chain
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response); // 🔓 No token — skip processing
+            filterChain.doFilter(request, response);
             return;
         }
 
-        final String jwt = authHeader.substring(7);
-        final String email = jwtUtil.extractUsername(jwt);
+        String jwt = authHeader.substring(7);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = UserDetailsService.loadUserByUsername(email);
+        try {
+            // If someone already authenticated earlier in the chain, skip
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                String username = jwtUtil.extractUsername(jwt);
+                if (username != null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            if (jwtUtil.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken token =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    if (jwtUtil.isTokenValid(jwt, userDetails)) {
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails, null, userDetails.getAuthorities());
 
-                token.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(token);
+                        authentication.setDetails(
+                                new WebAuthenticationDetailsSource().buildDetails(request));
+
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                        // Optional convenience for controllers (non-breaking):
+                        // if your CustomUserDetails is used, you can grab the ID later via request attribute
+                        if (userDetails instanceof CustomUserDetails cud) {
+                            request.setAttribute("authUserId", cud.getId());
+                            request.setAttribute("authRole", cud.getRoleName());
+                        }
+                    }
+                }
             }
+        } catch (Exception ex) {
+            // Swallow token parse/validation errors to avoid 500s on bad/expired tokens.
+            // Just proceed unauthenticated; protected endpoints will still be blocked by Spring Security.
         }
 
         filterChain.doFilter(request, response);
     }
 }
-
-
-
-

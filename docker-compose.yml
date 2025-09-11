@@ -1,0 +1,15 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16  # Postgres 16 + pgvector preinstalled
+    container_name: sounditout-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: sounditout
+    ports:
+      - "5433:5432"               # host:container
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+volumes:
+  dbdata:

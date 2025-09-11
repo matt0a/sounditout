@@ -34,19 +34,14 @@ const Dashboard: React.FC = () => {
         try {
             const decoded = jwtDecode<DecodedToken>(token);
             setFullName(decoded.fullName);
-            if (decoded.studentGroup) {
-                setStudentGroup(decoded.studentGroup);
-            }
+            if (decoded.studentGroup) setStudentGroup(decoded.studentGroup);
         } catch (err) {
             console.error('Failed to decode token:', err);
         }
 
         const fetchReports = async () => {
             try {
-                const response = await api.get<ProgressReport[]>('/reports/my', {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-
+                const response = await api.get<ProgressReport[]>('/reports/my');
                 const sorted = response.data.sort(
                     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
                 );
@@ -79,13 +74,20 @@ const Dashboard: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6 transition-colors">
             {/* Top Bar */}
-            <div className="flex justify-between items-center mb-6 max-w-4xl mx-auto">
+            <div className="flex justify-between items-center mb-6 max-w-5xl mx-auto">
                 <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                    <h2 className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">
                         Student Dashboard
                     </h2>
                 </div>
                 <div className="flex gap-2">
+                    {/* NEW: AI Coach */}
+                    <button
+                        onClick={() => navigate('/coach')}
+                        className="px-3 py-1 text-sm rounded border bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                        AI Coach
+                    </button>
                     <button
                         onClick={() => setDarkMode(!darkMode)}
                         className={`px-3 py-1 text-sm rounded border focus:outline-none ${
@@ -105,7 +107,7 @@ const Dashboard: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded shadow">
+            <div className="max-w-5xl mx-auto bg-white dark:bg-gray-800 p-6 rounded shadow border border-gray-200 dark:border-gray-700">
                 {/* Header */}
                 <div className="text-center mb-6">
                     <h2 className="text-3xl font-bold text-blue-600 dark:text-blue-400">
@@ -126,13 +128,12 @@ const Dashboard: React.FC = () => {
                             key={report.id}
                             className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded p-4 shadow hover:shadow-lg transition duration-300 relative break-words"
                         >
-                            <span
-                                className={`absolute top-2 right-2 w-3 h-3 rounded-full ${getDifficultyColor(
-                                    report.difficulty
-                                )}`}
-                                title={`Difficulty: ${report.difficulty}`}
-                            ></span>
-
+              <span
+                  className={`absolute top-2 right-2 w-3 h-3 rounded-full ${getDifficultyColor(
+                      report.difficulty
+                  )}`}
+                  title={`Difficulty: ${report.difficulty}`}
+              />
                             <p className="text-sm text-gray-500 dark:text-gray-300">
                                 {new Date(report.date).toLocaleDateString()}
                             </p>
@@ -180,6 +181,13 @@ const Dashboard: React.FC = () => {
                         </div>
                     ))}
                 </div>
+
+                {/* Empty state */}
+                {reports.length === 0 && !error && (
+                    <div className="text-center text-sm text-gray-600 dark:text-gray-300 mt-6">
+                        No reports yet.
+                    </div>
+                )}
             </div>
         </div>
     );

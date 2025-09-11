@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/sounditout-backend/src/main/resources/db/migration/V2__pgvector_and_study_ai.sql" value="c10f32cd-f64a-49f3-a69d-99758afd9d11" />
+  </component>
+</project>

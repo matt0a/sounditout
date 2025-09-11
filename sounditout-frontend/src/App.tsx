@@ -7,20 +7,27 @@ import RegisterPage from './pages/RegisterPage';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentDetail from './pages/StudentDetail';
 
+// NEW
+import AiCoach from './pages/AiCoach';
+import AdminAiTools from './pages/AdminAiTools';
 
 function App() {
-  return (
-      <Router>
-        <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/dashboard" element={<AdminDashboard />} />
-            <Route path="/home" element={<Dashboard />} />
-            <Route path="/students/:id" element={<StudentDetail />} />
-        </Routes>
-      </Router>
-  );
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/login" element={<LoginPage />} />
+
+                <Route path="/dashboard" element={<AdminDashboard />} />
+                <Route path="/students/:id" element={<StudentDetail />} />
+                <Route path="/admin/ai-tools" element={<AdminAiTools />} />
+
+                <Route path="/home" element={<Dashboard />} />
+                <Route path="/coach" element={<AiCoach />} />
+            </Routes>
+        </Router>
+    );
 }
 
 export default App;
