@@ -1,0 +1,16 @@
+# Node/Frontend artifacts if repo is monorepo
+node_modules
+dist
+build
+
+# Java/Maven
+target
+**/.DS_Store
+**/*.iml
+.mvn/wrapper/maven-wrapper.jar
+
+# VCS / IDE
+.git
+.gitignore
+.idea
+.vscode
