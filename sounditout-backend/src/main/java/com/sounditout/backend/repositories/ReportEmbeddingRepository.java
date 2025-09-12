@@ -40,4 +40,33 @@ public interface ReportEmbeddingRepository extends JpaRepository<ReportEmbedding
     @Query(value = "DELETE FROM report_embedding WHERE student_id = :studentId", nativeQuery = true)
     int deleteAllForStudent(@Param("studentId") Long studentId);
 
+    /**
+     * Nearest-neighbor search returning cosine similarity (score).
+     * We sort by distance (smaller is closer) but also return score = 1 - distance.
+     * Optional subject filter (case-insensitive, contains).
+     *
+     * Row: [id, student_id, report_id, subject, content, created_at, score]
+     */
+    @Query(value = """
+        SELECT
+            id,
+            student_id,
+            report_id,
+            subject,
+            content,
+            created_at,
+            1 - (embedding <=> CAST(:qvec AS vector)) AS score
+        FROM report_embedding
+        WHERE student_id = :studentId
+          AND ( :subject IS NULL OR :subject = '' OR subject ILIKE CONCAT('%', :subject, '%') )
+        ORDER BY embedding <=> CAST(:qvec AS vector)
+        LIMIT :k
+        """, nativeQuery = true)
+    List<Object[]> searchTopKWithScore(
+            @Param("studentId") Long studentId,
+            @Param("qvec") String queryVecLiteral,
+            @Param("k") int k,
+            @Param("subject") String subjectFilter // nullable
+    );
+
 }

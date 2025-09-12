@@ -5,26 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7094a355-5837-47c0-836e-300c58c099fb" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/sounditout-backend/src/main/resources/db/migration/V2__pgvector_and_study_ai.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sounditout-backend.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sounditout-backend.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-backend/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/SoundItOutBackendApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/SoundItOutBackendApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/security/CustomUserDetails.java" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/security/CustomUserDetails.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/security/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/security/JwtAuthenticationFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/security/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/services/ProgressReportService.java" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/services/ProgressReportService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-backend/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/repositories/ReportEmbeddingRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/repositories/ReportEmbeddingRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/services/StudyCoachService.java" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/services/StudyCoachService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/weblayer/controllers/AiController.java" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-backend/src/main/java/com/sounditout/backend/weblayer/controllers/AiController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sounditout-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-frontend/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sounditout-frontend/.env.production" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-frontend/.env.production" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-frontend/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-frontend/src/components/StudentCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-frontend/src/components/StudentCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-frontend/src/pages/AdminDashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-frontend/src/pages/AdminDashboard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-frontend/src/pages/Dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-frontend/src/pages/Dashboard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sounditout-frontend/src/types/Auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-frontend/src/types/Auth.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sounditout-frontend/src/pages/AiCoach.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-frontend/src/pages/AiCoach.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sounditout-frontend/src/types/ai.ts" beforeDir="false" afterPath="$PROJECT_DIR$/sounditout-frontend/src/types/ai.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -117,7 +105,7 @@
       <workItem from="1754973224396" duration="6811000" />
       <workItem from="1755114093215" duration="5849000" />
       <workItem from="1757460473451" duration="22583000" />
-      <workItem from="1757545588353" duration="17957000" />
+      <workItem from="1757545588353" duration="26827000" />
     </task>
     <servers />
   </component>

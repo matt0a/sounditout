@@ -21,10 +21,15 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class StudyCoachService {
+
+    private static final double SIMILARITY_CUTOFF = 0.75; // discard weak matches
+    private static final int RAG_CANDIDATES = 12;         // fetch more, then filter
+    private static final int RAG_MAX = 6;                 // final context size
 
     private final EmbeddingModel embeddingModel;
     private final OpenAiChatModel chatModel;
@@ -32,87 +37,78 @@ public class StudyCoachService {
     private final StudyPlanRepository planRepo;
     private final ObjectMapper objectMapper;
 
-    /**
-     * Generate and persist a one-week study plan for a student.
-     * - Embed the student's goal
-     * - Retrieve most relevant prior report snippets (RAG)
-     * - Ask the chat model for STRICT-JSON plan and store it as jsonb
-     */
     @Transactional
     public StudyPlan generateWeeklyPlan(Long studentId, String goalPrompt) {
-        // 1) Embed the student's goal (M2 returns List<float[]> when you pass List<String>)
+        // 1) Embed goal
         List<float[]> vectors = embeddingModel.embed(List.of(goalPrompt));
-        float[] vectorArray = vectors.get(0);
-        String qLiteral = toVectorLiteral(vectorArray);
+        String qLiteral = toVectorLiteral(vectors.get(0));
 
-        // 2) Retrieve top-k prior report snippets for this student (RAG context)
-        List<Object[]> rows = embeddingRepo.searchTopKRaw(studentId, qLiteral, 6);
-        StringBuilder ctx = new StringBuilder();
-        for (Object[] r : rows) {
-            // row = [id, student_id, report_id, subject, content, created_at]
-            String subject = r[3] != null ? r[3].toString() : "";
-            String content = r[4] != null ? r[4].toString() : "";
-            ctx.append("Subject: ").append(subject).append("\n");
-            ctx.append("Content: ").append(content).append("\n---\n");
-        }
+        // 2) Retrieve with score, then filter by similarity cutoff
+        // Row shape: [id, student_id, report_id, subject, content, created_at, score]
+        List<Object[]> raw = embeddingRepo.searchTopKWithScore(studentId, qLiteral, RAG_CANDIDATES, null);
 
-        // 3) Ask the model to produce STRICT JSON for the weekly plan
+        List<Object[]> filtered = raw.stream()
+                .filter(r -> r[6] instanceof Number n && n.doubleValue() >= SIMILARITY_CUTOFF)
+                .limit(RAG_MAX)
+                .toList();
+
+        boolean noRelevantContext = filtered.isEmpty();
+        String ctx = noRelevantContext ? "(no prior relevant context)" : buildContext(filtered);
+
+        // 3) Prompt LLM for STRICT JSON
         String sys = """
-                You are a tutoring coach. Create a realistic one-week study plan.
-                Use the student's past feedback (RAG context) to be specific.
-                Output STRICT JSON only with this schema (no extra text):
-                {
-                  "week_start": "YYYY-MM-DD",
-                  "goals": "string",
-                  "tasks": [
-                    { "day": "Mon|Tue|Wed|Thu|Fri|Sat|Sun", "title": "string", "steps": ["string", ...] }
-                  ]
-                }
-                """;
+            You are a tutoring coach. Create a realistic one-week study plan.
+            Use the student's past feedback (RAG context) ONLY if it is relevant.
+            If the RAG context equals "(no prior relevant context)", IGNORE it and base the plan solely on the student's goal.
+            Output STRICT JSON only with this schema (no extra text):
+            {
+              "week_start": "YYYY-MM-DD",
+              "goals": "string",
+              "tasks": [
+                { "day": "Mon|Tue|Wed|Thu|Fri|Sat|Sun", "title": "string", "steps": ["string", ...] }
+              ]
+            }
+            """;
 
         String user = """
-                Student goal: %s
+            Student goal: %s
 
-                RAG context:
-                %s
-                """.formatted(goalPrompt, ctx);
+            RAG context:
+            %s
+            """.formatted(goalPrompt, ctx);
 
-        ChatResponse reply = chatModel.call(new Prompt(
-                List.of(new SystemMessage(sys), new UserMessage(user))
-        ));
+        ChatResponse reply = chatModel.call(new Prompt(List.of(new SystemMessage(sys), new UserMessage(user))));
+        String rawJson = reply.getResult().getOutput().getContent();
 
-        String strictJson = reply.getResult().getOutput().getContent(); // STRICT JSON from the model
-
-        // Parse JSON into JsonNode so Hibernate Types can store it as jsonb
-        final JsonNode tasksNode;
+        // 4) Persist plan (parse to JsonNode to match entity field type jsonb -> JsonNode)
+        JsonNode tasksNode;
         try {
-            tasksNode = objectMapper.readTree(strictJson);
+            tasksNode = objectMapper.readTree(rawJson);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Model did not return valid JSON for study plan.", e);
+            // If the model ever returns non-JSON, fail fast with a clear message
+            throw new IllegalStateException("Model did not return valid JSON for study plan", e);
         }
 
-        // 4) Persist plan (week starts on Monday in UTC)
         LocalDate monday = LocalDate.now(ZoneOffset.UTC).with(DayOfWeek.MONDAY);
         StudyPlan plan = StudyPlan.builder()
                 .studentId(studentId)
                 .weekStart(monday)
                 .goals(goalPrompt)
-                .tasks(tasksNode) // <-- store as JSONB
+                .tasks(tasksNode)     // ✅ JsonNode, not String
                 .build();
 
         return planRepo.save(plan);
     }
 
-    /**
-     * Helper used by the /api/ai/search endpoint to inspect the top-K nearest
-     * report snippets for a student.
-     */
+    /** Exposed for debugging/search endpoint, with optional subject filter. */
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> searchTopK(Long studentId, String query, int k) {
+    public List<Map<String, Object>> searchTopK(Long studentId, String query, int k, String subjectFilter) {
         List<float[]> vectors = embeddingModel.embed(List.of(query));
         String literal = toVectorLiteral(vectors.get(0));
 
-        List<Object[]> rows = embeddingRepo.searchTopKRaw(studentId, literal, k);
+        List<Object[]> rows = embeddingRepo.searchTopKWithScore(
+                studentId, literal, Math.max(k, RAG_CANDIDATES), subjectFilter
+        );
 
         return rows.stream().map(r -> Map.of(
                 "id", r[0],
@@ -120,11 +116,23 @@ public class StudyCoachService {
                 "report_id", r[2],
                 "subject", r[3],
                 "content", r[4],
-                "created_at", r[5]
-        )).toList();
+                "created_at", r[5],
+                "score", r[6]
+        )).limit(k).collect(Collectors.toList());
     }
 
-    /** Convert float[] vector to pgvector literal: "[v1,v2,...]". */
+    private static String buildContext(List<Object[]> rows) {
+        StringBuilder ctx = new StringBuilder();
+        for (Object[] r : rows) {
+            String subject = r[3] != null ? r[3].toString() : "";
+            String content = r[4] != null ? r[4].toString() : "";
+            ctx.append("Subject: ").append(subject).append("\n");
+            ctx.append("Content: ").append(content).append("\n---\n");
+        }
+        return ctx.toString();
+    }
+
+    /** Convert float[] to pgvector literal. */
     private static String toVectorLiteral(float[] v) {
         StringBuilder sb = new StringBuilder(v.length * 10);
         sb.append('[');

@@ -1,16 +1,21 @@
 // src/types/ai.ts
 
 export type StudyTask = {
-    day: 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
+    day: string;             // "Mon" | "Tue" | ...
     title: string;
     steps: string[];
 };
 
 export type StudyPlanDTO = {
-    week_start: string; // ISO date
+    id: number;
+    studentId: number;
+    weekStart: string;       // ISO date from backend
     goals: string;
-    tasks: StudyTask[];
+    // tasks comes back as JSONB; could be either the array itself,
+    // or an object like { week_start, goals, tasks: [...] }
+    tasks: unknown;
 };
+
 
 export type StudyPlan = {
     id: number;

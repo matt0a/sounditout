@@ -92,21 +92,20 @@ public class AiController {
     public ResponseEntity<?> search(
             @RequestParam @NotBlank String query,
             @RequestParam(defaultValue = "5") @Min(1) int k,
+            @RequestParam(required = false) String subject, // NEW
             Authentication auth
     ) {
-        if (!(auth.getPrincipal() instanceof CustomUserDetails cud)) {
-            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
-        }
-        Long userId = cud.getId();
+        Long userId = ((CustomUserDetails) auth.getPrincipal()).getId();
         Long studentId = studentRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Student profile not found"))
                 .getId();
 
-        var result = studyCoachService.searchTopK(studentId, query, k);
+        var result = studyCoachService.searchTopK(studentId, query, k, subject);
         return ResponseEntity.ok(Map.of(
                 "studentId", studentId,
                 "query", query,
                 "k", k,
+                "subject", subject,
                 "results", result
         ));
     }
