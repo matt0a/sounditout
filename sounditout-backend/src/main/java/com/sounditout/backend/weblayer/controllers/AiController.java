@@ -8,6 +8,7 @@ import com.sounditout.backend.repositories.StudentRepository;
 import com.sounditout.backend.security.CustomUserDetails;
 import com.sounditout.backend.services.StudyAiService;
 import com.sounditout.backend.services.StudyCoachService;
+import com.sounditout.backend.services.YouTubeSearchService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -32,6 +33,8 @@ public class AiController {
     private final ReportEmbeddingRepository embeddingRepo;
     private final StudentRepository studentRepository;
     private final ProgressReportRepository progressReportRepository;
+    private final YouTubeSearchService youTubeSearchService;
+
 
     // ---------- 1) Upsert an embedding for a report ----------
     @PostMapping("/reports/{reportId}/embed")
@@ -108,5 +111,26 @@ public class AiController {
                 "subject", subject,
                 "results", result
         ));
+    }
+
+    @GetMapping("/resources/videos")
+    public ResponseEntity<?> videosForTopic(
+            @RequestParam("topic") String topic,
+            @RequestParam(name = "max", defaultValue = "5") int max
+    ) {
+        // Allow both STUDENT and ADMIN (your security already allows /api/ai/** for both roles)
+        var videos = youTubeSearchService.searchVideos(topic, max);
+        return ResponseEntity.ok(Map.of(
+                "topic", topic,
+                "count", videos.size(),
+                "videos", videos
+        ));
+    }
+
+    @GetMapping("/study-plan/resources")
+    public ResponseEntity<?> resources(@RequestParam String topic,
+                                       @RequestParam(defaultValue = "6") int max) {
+        var list = youTubeSearchService.searchVideos(topic, Math.min(Math.max(max,1), 10));
+        return ResponseEntity.ok(list);
     }
 }

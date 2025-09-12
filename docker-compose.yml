@@ -6,6 +6,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: sounditout
+      YOUTUBE_API_KEY: AIzaSyBNqlAx8UNSjZGYbNl737vUQxIwF1Itc-s
     ports:
       - "5433:5432"               # host:container
     volumes:

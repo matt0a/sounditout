@@ -12,6 +12,8 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,14 +41,12 @@ public class StudyCoachService {
 
     @Transactional
     public StudyPlan generateWeeklyPlan(Long studentId, String goalPrompt) {
-        // 1) Embed goal
+        // ---------- 1) Embed goal ----------
         List<float[]> vectors = embeddingModel.embed(List.of(goalPrompt));
         String qLiteral = toVectorLiteral(vectors.get(0));
 
-        // 2) Retrieve with score, then filter by similarity cutoff
-        // Row shape: [id, student_id, report_id, subject, content, created_at, score]
+        // ---------- 2) Retrieve RAG rows (with score) ----------
         List<Object[]> raw = embeddingRepo.searchTopKWithScore(studentId, qLiteral, RAG_CANDIDATES, null);
-
         List<Object[]> filtered = raw.stream()
                 .filter(r -> r[6] instanceof Number n && n.doubleValue() >= SIMILARITY_CUTOFF)
                 .limit(RAG_MAX)
@@ -55,50 +55,75 @@ public class StudyCoachService {
         boolean noRelevantContext = filtered.isEmpty();
         String ctx = noRelevantContext ? "(no prior relevant context)" : buildContext(filtered);
 
-        // 3) Prompt LLM for STRICT JSON
+        // ---------- 3) Ask the model for STRICT JSON ----------
         String sys = """
-            You are a tutoring coach. Create a realistic one-week study plan.
-            Use the student's past feedback (RAG context) ONLY if it is relevant.
-            If the RAG context equals "(no prior relevant context)", IGNORE it and base the plan solely on the student's goal.
-            Output STRICT JSON only with this schema (no extra text):
-            {
-              "week_start": "YYYY-MM-DD",
-              "goals": "string",
-              "tasks": [
-                { "day": "Mon|Tue|Wed|Thu|Fri|Sat|Sun", "title": "string", "steps": ["string", ...] }
-              ]
-            }
-            """;
+        You are a tutoring coach. Create a realistic one-week study plan.
+        Use the student's past feedback (RAG context) ONLY if it is relevant.
+        If the RAG context equals "(no prior relevant context)", ignore it and base the plan solely on the student's goal.
+        Output STRICT JSON only with this schema (no extra text):
+        {
+          "week_start": "YYYY-MM-DD",
+          "goals": "string",
+          "tasks": [
+            { "day": "Mon|Tue|Wed|Thu|Fri|Sat|Sun", "title": "string", "steps": ["string", ...] }
+          ]
+        }
+        """;
 
         String user = """
-            Student goal: %s
+        Student goal: %s
 
-            RAG context:
-            %s
-            """.formatted(goalPrompt, ctx);
+        RAG context:
+        %s
+        """.formatted(goalPrompt, ctx);
 
-        ChatResponse reply = chatModel.call(new Prompt(List.of(new SystemMessage(sys), new UserMessage(user))));
-        String rawJson = reply.getResult().getOutput().getContent();
+        // Tell OpenAI we want a JSON object back
+        var opts = OpenAiChatOptions.builder()
+                .withTemperature(0.3f)
+                .withResponseFormat(new OpenAiApi.ChatCompletionRequest.ResponseFormat(OpenAiApi.ChatCompletionRequest.ResponseFormat.Type.JSON_OBJECT)) // ✅ correct
+                .build();
 
-        // 4) Persist plan (parse to JsonNode to match entity field type jsonb -> JsonNode)
-        JsonNode tasksNode;
+
+        String content = callForJson(sys, user, opts); // one place to call/chat and get content as string
+
+        // ---------- 3b) Parse; if it fails, throw a clear 4xx so the FE can show a nice error ----------
+        JsonNode root;
         try {
-            tasksNode = objectMapper.readTree(rawJson);
-        } catch (Exception e) {
-            // If the model ever returns non-JSON, fail fast with a clear message
-            throw new IllegalStateException("Model did not return valid JSON for study plan", e);
+            root = objectMapper.readTree(content);     // <-- JSON parse
+        } catch (Exception parseEx) {
+            throw new IllegalStateException("Model did not return valid JSON for study plan");
         }
 
+        // We store just the tasks array in the 'tasks' jsonb column.
+        // If the model returned the whole object, extract tasks; if it returned tasks directly, use it as-is.
+        JsonNode tasksNode = root.has("tasks") ? root.get("tasks") : root;
+        if (tasksNode == null || !tasksNode.isArray()) {
+            // Be strict: we expect an array for tasks
+            throw new IllegalStateException("Model JSON did not contain a 'tasks' array");
+        }
+
+        // ---------- 4) Persist plan ----------
         LocalDate monday = LocalDate.now(ZoneOffset.UTC).with(DayOfWeek.MONDAY);
+
         StudyPlan plan = StudyPlan.builder()
                 .studentId(studentId)
                 .weekStart(monday)
                 .goals(goalPrompt)
-                .tasks(tasksNode)     // ✅ JsonNode, not String
+                .tasks(tasksNode)              // <-- pass JsonNode, not String
                 .build();
 
         return planRepo.save(plan);
     }
+
+    /** Tiny helper to call the chat model and return the raw content string. */
+    private String callForJson(String sys, String user, OpenAiChatOptions opts) {
+        ChatResponse reply = chatModel.call(
+                new Prompt(List.of(new SystemMessage(sys), new UserMessage(user)), opts)
+        );
+        return reply.getResult().getOutput().getContent();
+    }
+
+
 
     /** Exposed for debugging/search endpoint, with optional subject filter. */
     @Transactional(readOnly = true)
